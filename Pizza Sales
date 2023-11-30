@@ -1,1 +1,186 @@
+-- 1. Total Revenue:*/
+
+SELECT SUM(total_price) AS Total_Revenue FROM pizza_sales;
+
+/* 2. Average Order Value*/
+
+SELECT (SUM(total_price) / COUNT(DISTINCT order_id)) AS Avg_order_Value 
+FROM pizza_sales;
+
+
+/* 3.Total Pizzas Sold*/
+SELECT SUM(quantity) AS Total_pizza_sold 
+FROM pizza_sales;
+
+/* 4. Total Orders*/
+SELECT COUNT(DISTINCT order_id) AS Total_Orders 
+FROM pizza_sales;
+
+/* 5. Average Pizzas Per Order*/
+
+SELECT CAST(CAST(SUM(quantity) AS DECIMAL(10,2)) / 
+CAST(COUNT(DISTINCT order_id) AS DECIMAL(10,2)) AS DECIMAL(10,2))
+AS Avg_Pizzas_per_order
+FROM pizza_sales;
+
+/* 5. B. Daily Trend for Total Orders*/
+
+SELECT  DAYNAME(DW, order_date) AS order_day, COUNT(DISTINCT order_id) AS total_orders 
+FROM pizza_sales
+GROUP BY  DAYNAME(DW, order_date);
+
+/* C. Monthly Trend for Orders*/
+
+select pizza_name(MONTH, order_date) as Month_Name, COUNT(DISTINCT order_id) as Total_Orders
+from pizza_sales
+GROUP BY pizza_name(MONTH, order_date);
+
+/* D. % of Sales by Pizza Category*/
+
+SELECT pizza_category, CAST(SUM(total_price) AS DECIMAL(10,2)) as total_revenue,
+CAST(SUM(total_price) * 100 / (SELECT SUM(total_price) from pizza_sales) AS DECIMAL(10,2)) AS PCT
+FROM pizza_sales
+GROUP BY pizza_category;
+
+
+/* E. % of Sales by Pizza Size*/
+SELECT pizza_size, CAST(SUM(total_price) AS DECIMAL(10,2)) as total_revenue,
+CAST(SUM(total_price) * 100 / (SELECT SUM(total_price) from pizza_sales) AS DECIMAL(10,2)) AS PCT
+FROM pizza_sales
+GROUP BY pizza_size
+ORDER BY pizza_size;
+
+
+/* F. Total Pizzas Sold by Pizza Category*/
+
+SELECT pizza_category, SUM(quantity) as Total_Quantity_Sold
+FROM pizza_sales
+-- WHERE MONTH(order_date) = 2
+GROUP BY pizza_category
+ORDER BY Total_Quantity_Sold DESC
+
+/* G. Top 5 Pizzas by Revenue*/
+
+SELECT pizza_name, SUM(total_price) AS Total_Revenue
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY Total_Revenue DESC
+LIMIT 5;
+
+
+
+/* H. Bottom 5 Pizzas by Revenue*/
+SELECT pizza_name, SUM(total_price) AS Total_Revenue
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY Total_Revenue ASC
+LIMIT 5;
+
+/*I. Top 5 Pizzas by Quantity*/
+SELECT pizza_name, SUM(quantity) AS Total_Pizza_Sold
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY Total_Pizza_Sold DESC
+LIMIT 5;
+
+/*J. Bottom 5 Pizzas by Quantity*/
+
+SELECT pizza_name, SUM(quantity) AS Total_Pizza_Sold
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY Total_Pizza_Sold ASC
+LIMIT 5;
+
+/*K. Top 5 Pizzas by Total Orders*/
+
+SELECT pizza_name, COUNT(DISTINCT order_id) AS Total_Orders
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY Total_Orders DESC
+LIMIT 5;
+
+/*L. Borrom 5 Pizzas by Total Orders*/
+
+SELECT pizza_name, COUNT(DISTINCT order_id) AS Total_Orders
+FROM pizza_sales
+GROUP BY pizza_name
+ORDER BY Total_Orders ASC
+LIMIT 5;
+
+
+SELECT pizza_name, COUNT(DISTINCT order_id) AS Total_Orders
+FROM pizza_sales
+WHERE pizza_category = 'Classic'
+GROUP BY pizza_name
+ORDER BY Total_Orders ASC
+LIMIT 5;
+
+
+SELECT
+  MONTH(order_date) AS month,
+  SUM(quantity) AS total_orders
+FROM pizza_sales
+GROUP BY MONTH(order_date)
+ORDER BY month ASC;
+
+-- Step 1: Add a new column named "Month" to the "pizza_sales" table
+ALTER TABLE pizza_sales
+ADD COLUMN Month VARCHAR(255) AFTER order_date;
+
+-- Step 2: Update the "Month" column with month names based on the "order_date"
+UPDATE pizza_sales
+SET Month = DATE_FORMAT(order_date, '%M')
+WHERE order_id = 01/01/2015; 
+
+-- Replace 123 with the actual order_id value you want to update
+
+
+
+SELECT DATE_FORMAT(order_date, '%M') AS order_month,
+order_date AS order_day,
+    COUNT(DISTINCT order_id) AS total_orders
+FROM 
+    pizza_sales
+GROUP BY 
+    order_month, order_day;
+
+SELECT
+    all_days.day_name,
+    COUNT(pizza_sales.order_id) AS total_orders
+FROM (
+    SELECT 'Monday' AS day_name
+    UNION SELECT 'Tuesday'
+    UNION SELECT 'Wednesday'
+    UNION SELECT 'Thursday'
+    UNION SELECT 'Friday'
+    UNION SELECT 'Saturday'
+    UNION SELECT 'Sunday'
+) all_days
+LEFT JOIN pizza_sales ON DAYNAME(pizza_sales.order_date) = all_days.day_name
+GROUP BY
+    all_days.day_name
+ORDER BY
+    DAYOFWEEK(all_days.day_name);
+    
+    
+    SELECT
+  order_day,
+  COUNT(DISTINCT 'order_id') AS total_orders
+FROM
+  (
+    SELECT
+      DATE_FORMAT(order_date, '%W') AS order_day
+    FROM
+      pizza_sales
+    WHERE
+      order_date IS NOT NULL AND
+      order_date > '1900-01-01' AND
+      order_date < '2203-01-01'
+  ) AS order_days
+GROUP BY
+  order_day
+ORDER BY
+  FIELD(order_day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
+
+
 
